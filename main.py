@@ -9,13 +9,14 @@ welcome.pack(pady=20)
 
 canvas = None
 RECT_SIZE = 75
+MAX_RECTS = root.winfo_screenwidth() // RECT_SIZE - 2
 
 cache_input_label = ttk.Label(root, text="Enter cache size:", font=("Helvetica", 16))
 cache_input_label.pack(pady=(20, 0))
 cache_input = ttk.Entry(root, width=10)
 cache_input.pack(pady=(5, 0))
 
-access_input_label = ttk.Label(root, text="Enter number of access requests:", font=("Helvetica", 16))
+access_input_label = ttk.Label(root, text="Enter number access sequence size:", font=("Helvetica", 16))
 access_input_label.pack(pady=(20, 0))
 access_input = ttk.Entry(root, width=10)
 access_input.pack(pady=(5, 0))
@@ -25,12 +26,13 @@ def random_char_list(n):
     import string
     return [random.choice(string.ascii_uppercase) for _ in range(n)]
 
-def draw_lists(cache, access_requests):
+def draw_lists(cache, access_sequence):
     global canvas
     canvas = Canvas(root, height=600, bg="#3F3F3F")
     canvas.pack(fill=BOTH, expand=True)
 
-    x_offset = 100
+    x_offset = root.winfo_screenwidth() // 2 - (len(cache) * RECT_SIZE) // 2
+    print(x_offset)
     y_offset = 75
     for idx, c in enumerate(cache):
         x1 = x_offset + idx * RECT_SIZE
@@ -49,19 +51,19 @@ def on_start_viz():
     cache_size = cache_input.get()
     try:
         cache_size = int(cache_size)
-        if cache_size <= 0:
+        if cache_size <= 0 or cache_size > MAX_RECTS:
             raise ValueError
     except ValueError:
-        messagebox.showerror("Invalid Input", "Please enter a valid positive integer larger than 0 for cache size.")
+        messagebox.showerror("Invalid Input", f"Please enter a valid positive integer larger than 0 and less than or equal to {MAX_RECTS} for cache size.")
         return
 
     num_requests = access_input.get()
     try:
         num_requests = int(num_requests)
-        if num_requests <= 0:
+        if num_requests <= 0 or num_requests > MAX_RECTS:
             raise ValueError
     except ValueError:
-        messagebox.showerror("Invalid Input", "Please enter a valid positive integer larger than 0 for number of access requests.")
+        messagebox.showerror("Invalid Input", f"Please enter a valid positive integer larger than 0 and less than or equal to {MAX_RECTS} for number of access requests.")
         return
     
     welcome.destroy()
@@ -72,10 +74,10 @@ def on_start_viz():
     start_button.destroy()
 
     cache = random_char_list(cache_size)
-    access_requests = None
+    access_sequence = None
     # TODO (For Mohsen): generate access requests list
     # I wonder how???
-    draw_lists(cache, access_requests)
+    draw_lists(cache, access_sequence)
     
 
 
