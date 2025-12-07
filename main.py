@@ -7,7 +7,7 @@ root = Tk()
 root.title("Optimal Caching Algorithm Visualizer")
 root.attributes('-fullscreen', True)
 
-welcome = ttk.Label(root, text="Welcome to the Optimal Caching Algorithm Visualizer", font=("Helvetica", 24))
+welcome = ttk.Label(root, text="Welcome to the Optimal Caching Algorithm Visualizer", font=("Helvetica", 34))
 welcome.pack(pady=20)
 
 canvas = None
@@ -20,6 +20,9 @@ cache = []
 driver_index = 0   
 driver_arrow = None
 
+hit_count = 0
+hit_label = None
+
 
 def random_char_list(n):
     return [random.choice(string.ascii_uppercase) for _ in range(n)]
@@ -29,7 +32,7 @@ def draw_cache_list(cache):
     """Draw the cache boxes centered at the top."""
     global canvas
     x_offset = root.winfo_screenwidth() // 2 - (len(cache) * RECT_SIZE) // 2
-    y_offset = 75
+    y_offset = 175
 
     for idx, c in enumerate(cache):
         x1 = x_offset + idx * RECT_SIZE
@@ -39,12 +42,15 @@ def draw_cache_list(cache):
         canvas.create_rectangle(x1, y1, x2, y2, outline="white")
         canvas.create_text((x1 + x2) / 2, (y1 + y2) / 2, text=c, fill="white", font=("Helvetica", 20))
 
+        canvas.create_text(x_offset - 50, y_offset + RECT_SIZE / 2,
+                       text="Cache:", fill="white", font=("Helvetica", 18))
+
 
 def draw_access_sequence(access):
     """Draw the access sequence centered lower on screen."""
     global canvas
     x_offset = root.winfo_screenwidth() // 2 - (len(access) * RECT_SIZE) // 2
-    y_offset = 250
+    y_offset = 350
 
     for idx, c in enumerate(access):
         x1 = x_offset + idx * RECT_SIZE
@@ -54,10 +60,13 @@ def draw_access_sequence(access):
         canvas.create_rectangle(x1, y1, x2, y2, outline="lightblue")
         canvas.create_text((x1 + x2) / 2, (y1 + y2) / 2, text=c, fill="lightblue", font=("Helvetica", 20))
 
+        canvas.create_text(x_offset - 53, y_offset + RECT_SIZE / 2,
+                       text="Visa hh:", fill="white", font=("Helvetica", 18))#cache wla visa (for the illiterate)
+
 
 def draw_driver(index):
     """Draw the arrow pointing to the current element in access sequence."""
-    global canvas, access_sequence, driver_arrow
+    global canvas, access_sequence, driver_arrow, hit_count, hit_label
 
     if driver_arrow:
         canvas.delete(driver_arrow)
@@ -67,9 +76,18 @@ def draw_driver(index):
 
     x_offset = root.winfo_screenwidth() // 2 - (len(access_sequence) * RECT_SIZE) // 2
     box_x = x_offset + index * RECT_SIZE + RECT_SIZE // 2
-    arrow_y = 220
+    arrow_y = 320
 
-    driver_arrow = canvas.create_text(box_x, arrow_y, text="↓", fill="yellow", font=("Helvetica", 30))
+    # Hit check
+    if access_sequence[index] in cache:
+        color = "green"
+        hit_count += 1
+        hit_label.config(text=f"Hits: {hit_count}")
+    else:
+        color = "red"
+        #write miss check here bby
+
+    driver_arrow = canvas.create_text(box_x, arrow_y, text="↓", fill=color, font=("Helvetica", 30))
 
 
 
@@ -94,7 +112,7 @@ def draw_lists(cache, access_sequence):
 
 
 def on_start_viz():
-    global cache, access_sequence, driver_index
+    global cache, access_sequence, driver_index, hit_label
 
     cache_size = cache_input.get()
     try:
@@ -105,7 +123,9 @@ def on_start_viz():
         messagebox.showerror("Invalid Input",
             f"Enter a number between 1 and {MAX_RECTS} for cache size.")
         return
-
+    
+    hit_label = ttk.Label(root, text=f"Hits: {hit_count}", font=("Helvetica", 20))
+    hit_label.pack(pady=(0, 10))
   
     num_requests = access_input.get()
     try:
@@ -124,7 +144,7 @@ def on_start_viz():
     access_input_label.destroy()
     access_input.destroy()
     start_button.destroy()
-
+    omar_label.destroy()#dont dlt :(
     
     cache = random_char_list(cache_size)
     access_sequence = random_char_list(num_requests)
@@ -138,17 +158,23 @@ def on_start_viz():
 
 
 
-cache_input_label = ttk.Label(root, text="Enter cache size:", font=("Helvetica", 16))
-cache_input_label.pack(pady=(20, 0))
-cache_input = ttk.Entry(root, width=10)
+cache_input_label = ttk.Label(root, text="Enter cache size:", font=("Helvetica", 26))
+cache_input_label.pack(pady=(150, 20))
+cache_input = ttk.Entry(root, width=30)
 cache_input.pack(pady=(5, 0))
 
-access_input_label = ttk.Label(root, text="Enter number access sequence size:", font=("Helvetica", 16))
-access_input_label.pack(pady=(20, 0))
-access_input = ttk.Entry(root, width=10)
-access_input.pack(pady=(5, 0))
+access_input_label = ttk.Label(root, text="Enter number access sequence size:", font=("Helvetica", 26))
+access_input_label.pack(pady=(40, 20))
+access_input = ttk.Entry(root, width=30)
+access_input.pack(pady=(5, 20))
 
-start_button = ttk.Button(root, text="Start Visualization", command=on_start_viz)
-start_button.pack(pady=20)
+start_button = ttk.Button(root, text="Start Visualization", command=on_start_viz,style="Big.TButton")
+start_button.pack(pady=(20,60))
+style = ttk.Style()
+style.configure("Big.TButton", font=("Helvetica", 14))
+
+
+omar_label = ttk.Label(root, text="I love Omar ❤️", font=("Helvetica", 26))
+omar_label.pack(pady=20)#dont delete pls :(
 
 root.mainloop()
