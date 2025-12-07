@@ -14,15 +14,16 @@ canvas = None
 RECT_SIZE = 75
 MAX_RECTS = root.winfo_screenwidth() // RECT_SIZE - 2
 
-
 access_sequence = []
 cache = []
-driver_index = 0   
+driver_index = 0
 driver_arrow = None
 
 hit_count = 0
 hit_label = None
 
+miss_count = 0
+miss_label = None
 
 def random_char_list(n):
     return [random.choice(string.ascii_uppercase) for _ in range(n)]
@@ -43,7 +44,7 @@ def draw_cache_list(cache):
         canvas.create_text((x1 + x2) / 2, (y1 + y2) / 2, text=c, fill="white", font=("Helvetica", 20))
 
         canvas.create_text(x_offset - 50, y_offset + RECT_SIZE / 2,
-                       text="Cache:", fill="white", font=("Helvetica", 18))
+                           text="Cache:", fill="white", font=("Helvetica", 18))
 
 
 def draw_access_sequence(access):
@@ -61,12 +62,14 @@ def draw_access_sequence(access):
         canvas.create_text((x1 + x2) / 2, (y1 + y2) / 2, text=c, fill="lightblue", font=("Helvetica", 20))
 
         canvas.create_text(x_offset - 53, y_offset + RECT_SIZE / 2,
-                       text="Visa hh:", fill="white", font=("Helvetica", 18))#cache wla visa (for the illiterate)
-
+                           text="Visa hh:", fill="white", font=("Helvetica", 18))  # cache wla visa (for the illiterate)
 
 def draw_driver(index):
     """Draw the arrow pointing to the current element in access sequence."""
-    global canvas, access_sequence, driver_arrow, hit_count, hit_label
+    global canvas, access_sequence, driver_arrow
+    global hit_count, hit_label
+    global miss_count, miss_label
+    global cache
 
     if driver_arrow:
         canvas.delete(driver_arrow)
@@ -85,10 +88,20 @@ def draw_driver(index):
         hit_label.config(text=f"Hits: {hit_count}")
     else:
         color = "red"
-        #write miss check here bby
+        # write miss check here bby
+        # MISS case
+        color = "red"
+        miss_count += 1
+        miss_label.config(text=f"Misses: {miss_count}")
+
+        # TODO: Apply OPTIMAL ALGORITHM to find the victim
+
+        # Redraw updated cache
+        canvas.delete("all")
+        draw_cache_list(cache)
+        draw_access_sequence(access_sequence)
 
     driver_arrow = canvas.create_text(box_x, arrow_y, text="↓", fill=color, font=("Helvetica", 30))
-
 
 
 def next_step():
@@ -100,61 +113,14 @@ def next_step():
         draw_driver(driver_index)
 
 
-
 def draw_lists(cache, access_sequence):
     global canvas
     canvas = Canvas(root, height=700, bg="#3F3F3F")
     canvas.pack(fill=BOTH, expand=True)
 
-    draw_cache_list(cache)          
+    draw_cache_list(cache)
     draw_access_sequence(access_sequence)
-    draw_driver(0)                 
-
-
-def on_start_viz():
-    global cache, access_sequence, driver_index, hit_label
-
-    cache_size = cache_input.get()
-    try:
-        cache_size = int(cache_size)
-        if cache_size <= 0 or cache_size > MAX_RECTS:
-            raise ValueError
-    except ValueError:
-        messagebox.showerror("Invalid Input",
-            f"Enter a number between 1 and {MAX_RECTS} for cache size.")
-        return
-    
-    hit_label = ttk.Label(root, text=f"Hits: {hit_count}", font=("Helvetica", 20))
-    hit_label.pack(pady=(0, 10))
-  
-    num_requests = access_input.get()
-    try:
-        num_requests = int(num_requests)
-        if num_requests <= 0 or num_requests > MAX_RECTS:
-            raise ValueError
-    except ValueError:
-        messagebox.showerror("Invalid Input",
-            f"Enter a number between 1 and {MAX_RECTS} for access requests.")
-        return
-
-    
-    welcome.destroy()
-    cache_input_label.destroy()
-    cache_input.destroy()
-    access_input_label.destroy()
-    access_input.destroy()
-    start_button.destroy()
-    omar_label.destroy()#dont dlt :(
-    
-    cache = random_char_list(cache_size)
-    access_sequence = random_char_list(num_requests)
-    driver_index = 0
-
-    draw_lists(cache, access_sequence)
-
-   
-    step_button = ttk.Button(root, text="Next Step", command=next_step)
-    step_button.pack(pady=20)
+    draw_driver(0)
 
 
 
@@ -168,13 +134,63 @@ access_input_label.pack(pady=(40, 20))
 access_input = ttk.Entry(root, width=30)
 access_input.pack(pady=(5, 20))
 
-start_button = ttk.Button(root, text="Start Visualization", command=on_start_viz,style="Big.TButton")
-start_button.pack(pady=(20,60))
+
+def on_start_viz():
+    global cache, access_sequence, driver_index, hit_label, miss_label, miss_count
+
+    cache_size = cache_input.get()
+    try:
+        cache_size = int(cache_size)
+        if cache_size <= 0 or cache_size > MAX_RECTS:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Invalid Input",
+                             f"Enter a number between 1 and {MAX_RECTS} for cache size.")
+        return
+
+    # Create miss/hit labels
+    miss_label = ttk.Label(root, text=f"Misses: {miss_count}", font=("Helvetica", 20))
+    miss_label.pack(pady=(0, 10))
+
+    hit_label = ttk.Label(root, text=f"Hits: {hit_count}", font=("Helvetica", 20))
+    hit_label.pack(pady=(0, 10))
+
+    num_requests = access_input.get()
+    try:
+        num_requests = int(num_requests)
+        if num_requests <= 0 or num_requests > MAX_RECTS:
+            raise ValueError
+    except ValueError:
+        messagebox.showerror("Invalid Input",
+                             f"Enter a number between 1 and {MAX_RECTS} for access requests.")
+        return
+
+    # Remove init UI
+    welcome.destroy()
+    cache_input_label.destroy()
+    cache_input.destroy()
+    access_input_label.destroy()
+    access_input.destroy()
+    start_button.destroy()
+    omar_label.destroy()
+
+    # Init simulation
+    cache = random_char_list(cache_size)
+    access_sequence = random_char_list(num_requests)
+    driver_index = 0
+
+    draw_lists(cache, access_sequence)
+
+    step_button = ttk.Button(root, text="Next Step", command=next_step)
+    step_button.pack(pady=20)
+
+
+start_button = ttk.Button(root, text="Start Visualization", command=on_start_viz, style="Big.TButton")
+start_button.pack(pady=(20, 60))
 style = ttk.Style()
 style.configure("Big.TButton", font=("Helvetica", 14))
 
-
 omar_label = ttk.Label(root, text="I love Omar ❤️", font=("Helvetica", 26))
-omar_label.pack(pady=20)#dont delete pls :(
+omar_label.pack(pady=20)  # dont delete pls :(
 
 root.mainloop()
