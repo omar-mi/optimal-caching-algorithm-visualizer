@@ -25,8 +25,11 @@ hit_label = None
 miss_count = 0
 miss_label = None
 
-def random_char_list(n):
-    return [random.choice(string.ascii_uppercase) for _ in range(n)]
+def random_char_list(n, has_duplicates=True):
+    if has_duplicates:
+        return [random.choice(string.ascii_uppercase) for _ in range(n)]
+    else:
+        return random.sample(string.ascii_uppercase, n)
 
 
 def draw_cache_list(cache):
@@ -175,8 +178,8 @@ def on_start_viz():
     omar_label.destroy()
 
     # Init simulation
-    cache = random_char_list(cache_size)
-    access_sequence = random_char_list(num_requests)
+    cache = random_char_list(cache_size, has_duplicates=False)
+    access_sequence = random_char_list(num_requests, has_duplicates=True)
     driver_index = 0
 
     draw_lists(cache, access_sequence)
