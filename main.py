@@ -6,7 +6,6 @@ import string
 root = Tk()
 root.title("Optimal Caching Algorithm Visualizer")
 root.attributes('-fullscreen', True)
-
 welcome = ttk.Label(root, text="Welcome to the Optimal Caching Algorithm Visualizer", font=("Helvetica", 34))
 welcome.pack(pady=20)
 
@@ -15,7 +14,7 @@ RECT_SIZE = 75
 MAX_RECTS = root.winfo_screenwidth() // RECT_SIZE - 2
 
 access_sequence = []
-cache = []
+cache = {}
 driver_index = 0
 driver_arrow = None
 
@@ -31,7 +30,12 @@ def random_char_list(n, has_duplicates=True):
     else:
         return random.sample(string.ascii_uppercase, n)
 
-
+def random_char_dict(n, has_duplicates=True):
+    if has_duplicates:
+        return [random.choice(string.ascii_uppercase) for _ in range(n)]
+    else:
+        return {x: 0 for x in  random.sample(string.ascii_uppercase, n)}
+    
 def draw_cache_list(cache):
     """Draw the cache boxes centered at the top."""
     global canvas
@@ -87,10 +91,10 @@ def draw_driver(index):
     # Hit check
     if access_sequence[index] in cache:
         color = "green"
+        cache[access_sequence[index]] += 1
         hit_count += 1
         hit_label.config(text=f"Hits: {hit_count}")
     else:
-        color = "red"
         # write miss check here bby
         # MISS case
         color = "red"
@@ -98,7 +102,14 @@ def draw_driver(index):
         miss_label.config(text=f"Misses: {miss_count}")
 
         # TODO: Apply OPTIMAL ALGORITHM to find the victim
-
+        LRU_val = min(cache.values())
+        # o(n)
+        for i in cache:
+            if(cache[i] == LRU_val):
+                del cache[i]
+                cache[access_sequence[index]] = 0
+                print(cache)
+                break
         # Redraw updated cache
         canvas.delete("all")
         draw_cache_list(cache)
@@ -123,7 +134,7 @@ def draw_lists(cache, access_sequence):
 
     draw_cache_list(cache)
     draw_access_sequence(access_sequence)
-    draw_driver(0)
+    # draw_driver(0)
 
 
 
@@ -178,9 +189,9 @@ def on_start_viz():
     omar_label.destroy()
 
     # Init simulation
-    cache = random_char_list(cache_size, has_duplicates=False)
+    cache = random_char_dict(cache_size, has_duplicates=False)
     access_sequence = random_char_list(num_requests, has_duplicates=True)
-    driver_index = 0
+    driver_index = -1
 
     draw_lists(cache, access_sequence)
 
